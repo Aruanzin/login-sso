@@ -1,6 +1,6 @@
 // src/App.js
 import React, { useState, useEffect, useRef } from 'react';
-import keycloak from './keyclock';
+import keycloak from './keycloak';
 
 const App = () => {
   const [authenticated, setAuthenticated] = useState(false);
