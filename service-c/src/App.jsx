@@ -1,52 +1,51 @@
 import { useEffect, useState, useRef } from 'react';
 import keycloak from './keycloak';
 
-function App() {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
+// Função de autorização por role
+const hasRole = (role) =>
+  keycloak.tokenParsed?.realm_access?.roles.includes(role);
+
+export default function App() {
+  const [user, setUser] = useState(null);
   const isRun = useRef(false);
 
   useEffect(() => {
+    // Evita execução dupla no React 18 (StrictMode)
     if (isRun.current) return;
     isRun.current = true;
 
     keycloak
       .init({
-        onLoad: 'check-sso', // não força login
+        onLoad: 'login-required',
         pkceMethod: 'S256',
-        checkLoginIframe: false,
+        checkLoginIframe: false
       })
-      .then((auth) => {
-        setAuthenticated(auth);
-
-        if (auth) {
-          setUserInfo(keycloak.tokenParsed);
+      .then((authenticated) => {
+        if (authenticated) {
+          setUser(keycloak.tokenParsed);
         }
-      });
+      })
+      .catch(console.error);
   }, []);
 
-  if (!authenticated) {
-    return (
-      <div>
-        <h1>Service C</h1>
-        <button onClick={() => keycloak.login()}>
-          Login com Keycloak
-        </button>
-      </div>
-    );
+  if (!user) return <p>Carregando...</p>;
+
+  // Autorização baseada em role
+  if (!hasRole('admin')) {
+    return <h2>🚫 Acesso negado (somente administradores)</h2>;
   }
 
   return (
     <div>
-      <h1>Service C</h1>
-      <p>Usuário: {userInfo?.preferred_username}</p>
-      <p>
-        Roles:{' '}
-        {userInfo?.realm_access?.roles.join(', ')}
-      </p>
+      <h1>🛠 Painel Administrativo</h1>
 
-      <a href="http://localhost:5173">Ir para Service A</a><br />
-      <a href="http://localhost:5174">Ir para Service B</a><br />
+      <p>Administrador: {user.preferred_username}</p>
+
+      <ul>
+        <li>Usuários ativos: 128</li>
+        <li>Serviços conectados: 3</li>
+        <li>Status do sistema: OK</li>
+      </ul>
 
       <button onClick={() => keycloak.logout()}>
         Logout
@@ -54,5 +53,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

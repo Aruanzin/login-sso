@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.7
+    command: start-dev
+    ports:
+      - "8080:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import
+
+  service-a:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./service-a:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev"
+
+  service-b:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./service-b:/app
+    ports:
+      - "5174:5173"
+    command: sh -c "npm install && npm run dev"
+
+  service-c:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./service-c:/app
+    ports:
+      - "5175:5173"
+    command: sh -c "npm install && npm run dev"
